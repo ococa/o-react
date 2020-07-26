@@ -1,27 +1,14 @@
-import {OReact} from "../oReact";
+import { Component, OReact } from '../oReact';
 
-class MyComponent {
+class MyComponent extends Component{
   render() {
-    return <div>cool</div>
+    return <div name={'111'}><div>123</div><div>123123</div>cool</div>
   }
-  montTo(parent) {
-    let vdom = this.render();
-    vdom.mountTo(parent)
-
-  }
-
 }
 
-
-let a = <div name={"222"}>
-  <div>1</div>
-  <div>2</div>
-  <div>33</div>
-  <div>44</div>
-  <div>55</div>
-</div>
+let c = <div><MyComponent name="!"></MyComponent></div>
 
 OReact.render(
-  a,
+  c,
   document.body
 )
