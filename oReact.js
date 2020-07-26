@@ -6,6 +6,7 @@ class ElementWrapper {
     this.root.setAttribute(name, value)
   }
   appendChild(vChild) {
+    console.log('vChild', vChild)
     vChild.mountTo(this.root)
   }
   mountTo(parent) {
@@ -25,12 +26,19 @@ class TextWrapper {
 
 
 class Component {
+  constructor() {
+    this.children = [];
+
+  }
   setAttribute(name, value) {
     this[name] = value;
   }
   mountTo(parent) {
     let vdom = this.render();
     vdom.mountTo(parent)
+  }
+  appendChild(vChild) {
+    this.children.push(vChild)
   }
 }
 
@@ -54,12 +62,29 @@ const OReact = {
       element.setAttribute(name, attributes[name]);
     }
 
-    for (let child of children) {
-      if (typeof child === 'string') {
-        child = new TextWrapper(child)
+    let insertChildren = (children) => {
+      for (let child of children) {
+
+        if (Array.isArray(child)) {
+          insertChildren(child)
+        } else {
+          debugger;
+          if (!(child instanceof Component)
+            && !(child instanceof TextWrapper)
+            && !(child instanceof ElementWrapper)
+          ) {
+            child = String(child);
+          }
+          if (typeof child === 'string') {
+            child = new TextWrapper(child)
+          }
+          element.appendChild(child)
+        }
       }
-      element.appendChild(child)
     }
+
+    insertChildren(children)
+
     // debugger;
     return element
   },
