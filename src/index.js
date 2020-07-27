@@ -14,7 +14,8 @@ class Square extends Component{
         className="square"
         onClick={() => this.setState({value: this.state.value + 1})}
       >
-        {this.props.value}
+        {/*{this.props.value}:*/}
+        {this.state.value}
       </button>
     )
   };

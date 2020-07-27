@@ -17,10 +17,19 @@ class ElementWrapper {
   }
   appendChild(vChild) {
     // console.log('vChild', vChild)
-    vChild.mountTo(this.root)
+    let range = document.createRange();
+    if (this.root?.children.length) {
+      range.setStartAfter(this.root.lastChild);
+      range.setEndAfter(this.root.lastChild);
+    } else {
+      range.setStart(this.root, 0);
+      range.setEnd(this.root, 0);
+    }
+    vChild.mountTo(range)
   }
-  mountTo(parent) {
-    parent.appendChild(this.root)
+  mountTo(range) {
+    range.deleteContents();
+    range.insertNode(this.root)
   }
 }
 
@@ -29,8 +38,9 @@ class TextWrapper {
   constructor(content) {
     this.root = document.createTextNode(content)
   }
-  mountTo(parent) {
-    parent.appendChild(this.root)
+  mountTo(range) {
+    range.deleteContents();
+    range.insertNode(this.root)
   }
 }
 
@@ -44,9 +54,14 @@ class Component {
     this.props[name] = value;
     this[name] = value;
   }
-  mountTo(parent) {
+  mountTo(range) {
+    this.range = range;
+    this.update();
+  }
+  update() {
+    this.range.deleteContents();
     let vdom = this.render();
-    vdom.mountTo(parent)
+    vdom.mountTo(this.range);
   }
   appendChild(vChild) {
     this.children.push(vChild)
@@ -70,6 +85,7 @@ class Component {
     }
     merge(this.state, state)
     console.log(this.state)
+    this.update()
   }
 }
 
@@ -120,7 +136,16 @@ const OReact = {
     return element
   },
   render: function (vdom, rootElement) {
-    vdom.mountTo(rootElement)
+    let range = document.createRange();
+    if (rootElement?.children.length) {
+      range.setStartAfter(rootElement.lastChild);
+      range.setEndAfter(rootElement.lastChild);
+    } else {
+      range.setStart(rootElement, 0);
+      range.setEnd(rootElement, 0);
+    }
+
+    vdom.mountTo(range)
   }
 }
 
