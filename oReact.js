@@ -59,9 +59,19 @@ class Component {
     this.update();
   }
   update() {
+    // 保存待会要删掉的range
+    let placeholder = document.createElement('placeholder');
+    let range = document.createRange();
+    range.setStart(this.range.endContainer, this.range.endOffset);
+    range.setEnd(this.range.endContainer, this.range.endOffset);
+    range.insertNode(placeholder);
+
     this.range.deleteContents();
+
     let vdom = this.render();
     vdom.mountTo(this.range);
+
+    placeholder.removeChild(placeholder)
   }
   appendChild(vChild) {
     this.children.push(vChild)
