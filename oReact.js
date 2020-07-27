@@ -3,10 +3,20 @@ class ElementWrapper {
     this.root = document.createElement(type)
   }
   setAttribute(name, value) {
-    this.root.setAttribute(name, value)
+    if (name.match(/^on([\s\S]+)$/)) {
+      console.log(RegExp.$1)
+      let eventName = RegExp.$1.replace(/^[\s\S]/, s => s.toLowerCase())
+      this.root.addEventListener(eventName, value)
+    } else {
+      // this.props[name]/
+      if (name === 'className') {
+        name = 'class'
+      }
+      this.root.setAttribute(name, value)
+    }
   }
   appendChild(vChild) {
-    console.log('vChild', vChild)
+    // console.log('vChild', vChild)
     vChild.mountTo(this.root)
   }
   mountTo(parent) {
@@ -28,9 +38,10 @@ class TextWrapper {
 class Component {
   constructor() {
     this.children = [];
-
+    this.props = Object.create(null)
   }
   setAttribute(name, value) {
+    this.props[name] = value;
     this[name] = value;
   }
   mountTo(parent) {
@@ -39,6 +50,26 @@ class Component {
   }
   appendChild(vChild) {
     this.children.push(vChild)
+  }
+  setState(state) {
+    let merge = (oldState, newState) => {
+      for (let i in newState) {
+        if (typeof newState[i] === "object") {
+          if (typeof oldState[i] !== 'object') {
+            oldState[i] = {};
+          }
+          merge(oldState[i], newState[i])
+        } else {
+          oldState[i] = newState[i]
+        }
+      }
+
+    }
+    if (!this.state && state) {
+      this.state = {}
+    }
+    merge(this.state, state)
+    console.log(this.state)
   }
 }
 
@@ -68,7 +99,7 @@ const OReact = {
         if (Array.isArray(child)) {
           insertChildren(child)
         } else {
-          debugger;
+          // debugger;
           if (!(child instanceof Component)
             && !(child instanceof TextWrapper)
             && !(child instanceof ElementWrapper)
