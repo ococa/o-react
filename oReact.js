@@ -70,6 +70,9 @@ class ElementWrapper {
 class TextWrapper {
   constructor(content) {
     this.root = document.createTextNode(content)
+    this.type = '#text';
+    this.children = [];
+    this.props = Object.create(null);
   }
   mountTo(range) {
     this.range = range;
@@ -109,14 +112,26 @@ class Component {
           return false;
         }
         for (let name in node1.props) {
+          if (typeof node1.props[name] === 'function'
+            && typeof node2.props[name] === 'function'
+            && node1.props[name].toString() === node2.props[name].toString()
+          ) {
+            continue;
+          }
+          if (typeof node1.props[name] === 'object'
+            && typeof node2.props[name] === 'obejct'
+            && JSON.stringify(node1.props[name]) === JSON.stringify(node2.props[name])
+          ) {
+            continue;
+          }
           if (node1.props[name] !== node2.props[name]) {
             return false;
           }
-          if (Object.keys(node2.props).length !== Object.keys(node1.props).length) { // 判断props key是否完全一致，目前方案不可靠
-            return false;
-          }
-          return true;
         }
+        if (node2.props && Object.keys(node2.props).length !== Object.keys(node1.props).length) { // 判断props key是否完全一致，目前方案不可靠
+          return false;
+        }
+        return true;
       }
       // 判断node 的子节点是否是相同的node
       let isSameTree = (node1, node2) => {
