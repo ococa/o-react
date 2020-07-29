@@ -34,6 +34,7 @@ class ElementWrapper {
     this.children.push(vChild)
   }
   mountTo(range) {
+    this.range = range;
     range.deleteContents();
     let element = document.createElement(this.type);
 
@@ -71,6 +72,7 @@ class TextWrapper {
     this.root = document.createTextNode(content)
   }
   mountTo(range) {
+    this.range = range;
     range.deleteContents();
     range.insertNode(this.root)
   }
@@ -82,6 +84,9 @@ class Component {
     this.children = [];
     this.props = Object.create(null)
   }
+  get type() {
+    return this.constructor.name;
+  }
   setAttribute(name, value) {
     this.props[name] = value;
     this[name] = value;
@@ -91,19 +96,78 @@ class Component {
     this.update();
   }
   update() {
-    // 保存待会要删掉的range
-    // let placeholder = document.createElement('placeholder');
-    // let range = document.createRange();
-    // range.setStart(this.range.endContainer, this.range.endOffset);
-    // range.setEnd(this.range.endContainer, this.range.endOffset);
-    // range.insertNode(placeholder);
-    //
-    // this.range.deleteContents();
 
     let vdom = this.render();
-    vdom.mountTo(this.range);
+    /**
+     * 在更新的时候对比vdom实现最小更新
+     */
+    if (this.vdom) {
 
-    // placeholder.parentNode.removeChild(placeholder)
+      // 判断node 的type props 是否相同
+      let isSameNode = (node1, node2) => {
+        if (node2.type !== node1.type) {
+          return false;
+        }
+        for (let name in node1.props) {
+          if (node1.props[name] !== node2.props[name]) {
+            return false;
+          }
+          if (Object.keys(node2.props).length !== Object.keys(node1.props).length) { // 判断props key是否完全一致，目前方案不可靠
+            return false;
+          }
+          return true;
+        }
+      }
+      // 判断node 的子节点是否是相同的node
+      let isSameTree = (node1, node2) => {
+        if (!isSameNode(node1, node2)) {
+          return false;
+        }
+        if (node1.children.length !== node2.children.length) {
+          return false;
+        }
+        for (let i = 0; i < node1.children.length; i++) {
+          if (!isSameTree(node1.children[i], node2.children[i])) {
+            return false;
+          }
+        }
+        return true;
+      }
+      if (isSameTree(vdom, this.vdom)) { // 如果vdom 新旧一致 则return
+        return;
+      }
+      console.log('new vdom', vdom);
+      console.log('old vdom', this.vdom);
+
+      let replace = (newTree, oldTree) => {
+        // react diff
+
+        // 如果是相同tree 则不更新
+        if (isSameTree(newTree, oldTree)) {
+          return;
+        }
+
+        /**
+         * REACT 更新部分
+         */
+
+        // 1. 如果根节点不同 直接更新
+        if (!isSameNode(newTree, oldTree)) {
+          newTree.mountTo(oldTree.range);
+          // children
+        } else {
+          for (let i = 0; i < newTree.children.length; i++) {
+            replace(newTree.children[i], oldTree.children[i]);
+          }
+        }
+      }
+
+      replace(vdom, this.vdom)
+      // vdom.mountTo(this.range);
+    } else {
+      vdom.mountTo(this.range);
+    }
+    this.vdom = vdom;
   }
   appendChild(vChild) {
     this.children.push(vChild)
