@@ -71,7 +71,7 @@ class Component {
     let vdom = this.render();
     vdom.mountTo(this.range);
 
-    placeholder.removeChild(placeholder)
+    // placeholder.parentNode.removeChild(placeholder)
   }
   appendChild(vChild) {
     this.children.push(vChild)
@@ -79,9 +79,13 @@ class Component {
   setState(state) {
     let merge = (oldState, newState) => {
       for (let i in newState) {
-        if (typeof newState[i] === "object") {
+        if (typeof newState[i] === "object" && newState[i] !== null) {
           if (typeof oldState[i] !== 'object') {
-            oldState[i] = {};
+            if (Array.isArray(newState[i])) {
+              oldState[i] = [];
+            } else {
+              oldState[i] = {};
+            }
           }
           merge(oldState[i], newState[i])
         } else {
@@ -126,6 +130,9 @@ const OReact = {
           insertChildren(child)
         } else {
           // debugger;
+          if (child === null || child === void 0) {
+            child = ''
+          }
           if (!(child instanceof Component)
             && !(child instanceof TextWrapper)
             && !(child instanceof ElementWrapper)
